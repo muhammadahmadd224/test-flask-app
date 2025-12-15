@@ -1,0 +1,41 @@
+name: Flask App CI (Docker Build & Test)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Get source code from GitHub
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Build Docker image from Dockerfile
+      - name: Build Docker image
+        run: |
+          docker build -t flask-ci-app .
+
+      # 3️⃣ Run container from the built image
+      - name: Run Flask container
+        run: |
+          docker run -d -p 5000:5000 --name flask-test flask-ci-app
+
+      # 4️⃣ Wait for Flask app to start
+      - name: Wait for app startup
+        run: sleep 5
+
+      # 5️⃣ Test application using curl
+      - name: Test Flask endpoint
+        run: |
+          curl http://localhost:5000 | grep "Hello from Docker"
+
+      # 6️⃣ Stop & remove container
+      - name: Cleanup
+        run: |
+          docker stop flask-test
+          docker rm flask-test
